@@ -1,1 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Staff Holiday Note Generator</title>
+</head>
+<body>
+  <h1>Staff Holiday Note Generator</h1>
+  <form>
+    <label for="staff-name">Staff Name:</label>
+    <input type="text" id="staff-name" value="John Smith">
+    <br>
+    <label for="staff-position">Staff Position:</label>
+    <input type="text" id="staff-position" value="Concierge">
+    <br>
+    <label for="sender-name">Sender Name:</label>
+    <input type="text" id="sender-name" value="Jane Doe">
+    <br>
+    <label for="unit-number">Unit Number:</label>
+    <input type="text" id="unit-number" value="3001">
+    <br>
+    <label for="things-to-mention">Things to Mention:</label>
+    <br>
+    <textarea type="text" id="things-to-mention" rows="3" cols="100">taking care of the building, giving our dog a lot of love, always giving us a warm welcome when we get home</textarea>
+    <br>
+    <input type="button" value="Generate" onclick="generateNote()">
+  </form>
+  <br>
+  <textarea id="output" rows="20" cols="100"></textarea>
+  <br>
+  <button onclick="copyToClipboard()">Copy to Clipboard</button>
+  <script>
+    const PALM_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyAV6vmPgJtU5xJA6oOWzNBWNPLVUDdURmA"; 
 
+    function generateNote() {
+      const staffName = document.getElementById('staff-name').value;
+      const staffPosition = document.getElementById('staff-position').value;
+      const senderName = document.getElementById('sender-name').value;
+      const unitNumber = document.getElementById('unit-number').value;
+      const thingsToMention = document.getElementById('things-to-mention').value;
+
+      const prompt = createPrompt(staffName, staffPosition, senderName, unitNumber, thingsToMention)
+      
+      const outputPromise = callPalm(prompt);
+      
+      outputPromise.then(output => {
+        document.getElementById('output').value = output
+      });
+    }
+
+    function createPrompt(staffName, staffPosition, senderName, unitNumber, thingsToMention) {
+      const prompt = `Write a holiday thank you card to a building staff given
+(1) The staff's name,
+(2) The staff's position,
+(3) Building name,
+(4) A comma separated list of things to thank the staff for.
+
+Write the card to express sincere thanks and focus on the
+listed thing. Write the card with informal and amicable tone. Start with "Dear <staff's name>, Happy holidays!".
+
+At the end, write the sender name provided and mention the unit number.
+
+Staff's name: ${staffName}
+Staff's position: ${staffPosition}
+Building name: 10 Provost
+Sender name: ${senderName}
+Unite number: ${unitNumber}
+Things to mention: ${thingsToMention}`;
+      return prompt;
+    }
+
+    async function callPalm(prompt) {
+      data = {
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.5,
+          topK: 1,
+          topP: 1,
+          maxOutputTokens: 2048,
+          stopSequences: []
+        },
+        "safetySettings": [
+          {
+            "category": "HARM_CATEGORY_HARASSMENT",
+            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            "category": "HARM_CATEGORY_HATE_SPEECH",
+            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+          },
+          {
+            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+          }
+        ]
+      };
+
+      const response = await fetch(PALM_URL, {
+        method: "POST", // *GET, POST, PUT, DELETE, etc.
+        mode: "cors", // no-cors, *cors, same-origin
+        cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: "same-origin", // include, *same-origin, omit
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data), // body data type must match "Content-Type" header
+      });
+      
+      const responseObject = await response.json(); // parses JSON response into native JavaScript objects
+      return responseObject.candidates[0].content.parts[0].text;
+    }
+
+    function copyToClipboard() {
+      const output = document.getElementById('output');
+      output.select();
+      document.execCommand('copy');
+      alert('Copied to clipboard!');
+    }
+  </script>
+</body>
+</html>
