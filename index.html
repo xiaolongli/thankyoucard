@@ -22,6 +22,12 @@
     <br>
     <textarea type="text" id="things-to-mention" rows="3" cols="100">taking care of the building, giving our dog Abe a lot of love, always giving us a warm welcome when we get home</textarea>
     <br>
+    <label>Length:</label>
+    <input type="radio" id="long" name="drone" value="long" checked />
+    <label for="long">Long</label>
+    <input type="radio" id="short" name="drone" value="short" />
+    <label for="short">Short</label><br><br>
+  </div>
     <input type="button" value="Generate" onclick="generateNote()">
   </form>
   <br>
@@ -37,8 +43,9 @@
       const senderName = document.getElementById('sender-name').value;
       const unitNumber = document.getElementById('unit-number').value;
       const thingsToMention = document.getElementById('things-to-mention').value;
+      const longText = document.getElementById('long').checked;
 
-      const prompt = createPrompt(staffName, staffPosition, senderName, unitNumber, thingsToMention)
+      const prompt = createPrompt(staffName, staffPosition, senderName, unitNumber, thingsToMention, longText)
       
       const outputPromise = callPalm(prompt);
       
@@ -47,15 +54,16 @@
       });
     }
 
-    function createPrompt(staffName, staffPosition, senderName, unitNumber, thingsToMention) {
+    function createPrompt(staffName, staffPosition, senderName, unitNumber, thingsToMention, longText) {
       const prompt = `Write a holiday thank you card to a building staff given
 (1) The staff's name,
 (2) The staff's position,
 (3) Building name,
 (4) A comma separated list of things to thank the staff for.
 
-Write the card to express sincere thanks and focus on the
-listed thing. Write the card with informal and amicable tone. Start with "Dear <staff's name>, Happy holidays!".
+Write the card to express sincere thanks and focus on the listed thing.
+Write the card with informal and amicable tone.${longText ? '' : '\nUsing no more than 4 sentences.'}
+Start with "Dear <staff's name>,\nHappy holidays!".
 
 At the end, write the sender name provided and mention the unit number.
 
